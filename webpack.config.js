@@ -3,19 +3,12 @@ var webpack = require('webpack');
 var ionicWebpackFactory = require(process.env.IONIC_WEBPACK_FACTORY);
 var envVars = require('./.env.json');
 
-var ModuleConcatPlugin = require('webpack/lib/optimize/ModuleConcatenationPlugin');
-
-var prodPlugins = [];
-if (process.env.IONIC_ENV === 'prod') {
-    prodPlugins.push(new ModuleConcatPlugin());
-}
-
 module.exports = {
     entry: process.env.IONIC_APP_ENTRY_POINT,
     output: {
         path: '{{BUILD}}',
         publicPath: 'build/',
-        filename: '[name].js',
+        filename: process.env.IONIC_OUTPUT_JS_FILE_NAME,
         devtoolModuleFilenameTemplate: ionicWebpackFactory.getSourceMapperFunction(),
     },
     devtool: process.env.IONIC_SOURCE_MAP_TYPE,
@@ -38,17 +31,20 @@ module.exports = {
             {
                 test: /\.js$/,
                 loader: process.env.IONIC_WEBPACK_TRANSPILE_LOADER
+            },
+            {
+                test: /\.sql$/,
+                loader: 'raw-loader'
             }
         ]
     },
 
     plugins: [
         ionicWebpackFactory.getIonicEnvironmentPlugin(),
-        ionicWebpackFactory.getCommonChunksPlugin(),
         new webpack.DefinePlugin({
             ENV: JSON.stringify(envVars)
         })
-    ].concat(prodPlugins),
+    ],
 
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
